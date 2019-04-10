@@ -2,7 +2,7 @@
 
 This reposity contains the code neccesary to reproduce the results in the paper:
 
-A Grounded Unsupervised Universal Part-of-Speech Tagger for Low-Resource Languages. 
+[1] A Grounded Unsupervised Universal Part-of-Speech Tagger for Low-Resource Languages. 
 Ronald Cardenas, Ying Lin, Heng Ji and Jonathan May. NAACL 2019, Minneapolis, USA.
 
 
@@ -47,7 +47,7 @@ This will extract only the POS tags of CONLLU train files for languages experime
 1. Train POS language models
 
   *  From UD data
-  
+
 Training for several languages can be done by listing the iso-639-1 code of each language separated by commas. For instance, to train second order LMs for English and German, run:
 
 ```
