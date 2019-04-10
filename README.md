@@ -47,6 +47,7 @@ This will extract only the POS tags of CONLLU train files for languages experime
 1. Train POS language models
 
   *  From UD data
+  
 Training for several languages can be done by listing the iso-639-1 code of each language separated by commas. For instance, to train second order LMs for English and German, run:
 
 ```
@@ -60,6 +61,7 @@ Training for several languages can be done by listing the iso-639-1 code of each
 ```
 
   * Reformating an already trained LM in ARPA format
+
 Further down in the pipeline, Carmel reads trained language models in OpenFST format. Reformat an ARPA file as follows:
 
 ```
