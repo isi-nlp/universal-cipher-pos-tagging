@@ -24,10 +24,11 @@ You will also need:
 
 Initialize the submodules as follows:
 
-``` git submodule update --init --recursive
+```
+git submodule update --init --recursive
 ```
 
-Then, build the code in `src/carmel`, `src/brown-cluster`, and `src/marlin` (see each folder's README file for reference).
+Then build the code in `src/carmel`, `src/brown-cluster`, and `src/marlin` (see each folder's README file for reference).
 
 ## Using UTagger
 
@@ -36,7 +37,8 @@ Then, build the code in `src/carmel`, `src/brown-cluster`, and `src/marlin` (see
 
 If you want to use annoations from UD treebanks, you can extract the POS sequences by running
 
-```./setup_ud-treebank_data.sh -td <ud-treebank-parent-folder>
+```
+./setup_ud-treebank_data.sh -td <ud-treebank-parent-folder>
 ```
 
 This will extract only the POS tags of CONLLU train files for languages experimented with in [1].
@@ -44,34 +46,39 @@ This will extract only the POS tags of CONLLU train files for languages experime
 
 1. Train POS language models
 
-⋅⋅*  From UD data
+  *  From UD data
 Training for several languages can be done by listing the iso-639-1 code of each language separated by commas. For instance, to train second order LMs for English and German, run:
 
-```./train_format_lm_ud.sh  -l en,de  -o 2
+```
+./train_format_lm_ud.sh  -l en,de  -o 2
 ```
 
-⋅⋅* From POS token sequences (one sentence per line)
+  * From POS token sequences (one sentence per line)
 
-```./train_srilm_langmodel.sh -i <pos-file> -o <order>
+```
+./train_srilm_langmodel.sh -i <pos-file> -o <order>
 ```
 
-⋅⋅* Reformating an already trained LM in ARPA format
+  * Reformating an already trained LM in ARPA format
 Further down in the pipeline, Carmel reads trained language models in OpenFST format. Reformat an ARPA file as follows:
 
-```./src/code/arpa2wfst.sh -i <arpa-file> -l <lang-id> -o <order>
+```
+./src/code/arpa2wfst.sh -i <arpa-file> -l <lang-id> -o <order>
 ```
 
 2. Train UTagger
 
 
-```./utagger -i sample.in -if txt -m train \
+```
+./utagger -i sample.in -if txt -m train \
 -lm_o 2 -pl en,de -ca brown -nc 500
 ```
 
 
 3. Tag / eval
 
-```./utagger -i sample.in -if txt -m tag \
+```
+./utagger -i sample.in -if txt -m tag \
 -lm_o 2 -pl en,de -ca brown -nc 500
 ```
 
