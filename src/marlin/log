@@ -1,0 +1,34 @@
+W:     Number of words processed / total
+LL:    Current log-likelihood
+Swaps: Number of words that changed their class
+
+iter: 0
+W:  1688 /   6755 LL: -389785 Swaps:  1495
+W:  3376 /   6755 LL: -385828 Swaps:  2981
+W:  5064 /   6755 LL: -382624 Swaps:  4499
+W:  6752 /   6755 LL: -379357 Swaps:  5997
+W:  6755 /   6755 LL: -379352 Swaps:  5999
+iter: 1
+W:  1688 /   6755 LL: -376172 Swaps:   449
+W:  3376 /   6755 LL: -375490 Swaps:   984
+W:  5064 /   6755 LL: -375067 Swaps:  1393
+W:  6752 /   6755 LL: -374700 Swaps:  1758
+W:  6755 /   6755 LL: -374700 Swaps:  1758
+iter: 2
+W:  1688 /   6755 LL: -374131 Swaps:   209
+W:  3376 /   6755 LL: -373951 Swaps:   479
+W:  5064 /   6755 LL: -373831 Swaps:   685
+W:  6752 /   6755 LL: -373683 Swaps:   866
+W:  6755 /   6755 LL: -373683 Swaps:   866
+iter: 3
+W:  1688 /   6755 LL: -373387 Swaps:   126
+W:  3376 /   6755 LL: -373284 Swaps:   286
+W:  5064 /   6755 LL: -373191 Swaps:   412
+W:  6752 /   6755 LL: -373104 Swaps:   514
+W:  6755 /   6755 LL: -373104 Swaps:   514
+iter: 4
+W:  1688 /   6755 LL: -373060 Swaps:    50
+W:  3376 /   6755 LL: -373031 Swaps:   101
+W:  5064 /   6755 LL: -373011 Swaps:   128
+W:  6752 /   6755 LL: -372996 Swaps:   148
+W:  6755 /   6755 LL: -372996 Swaps:   148

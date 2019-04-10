@@ -1,0 +1,9 @@
+[submodule "src/uroman"]
+	path = src/uroman
+	url = git@github.com:isi-nlp/uroman.git
+[submodule "src/brown-cluster"]
+	path = src/brown-cluster
+	url = git@github.com:percyliang/brown-cluster.git
+[submodule "src/carmel"]
+	path = src/carmel
+	url = git@github.com:isi-nlp/carmel.git

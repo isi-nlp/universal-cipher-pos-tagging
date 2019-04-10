@@ -1,0 +1,201 @@
+#!/bin/bash
+
+set -e
+
+
+LM=2            # LM order
+CHANNEL=""
+INPUT=""
+OUTPUT="output"
+
+MODE="train" # [train,test]
+ROM="false"
+IL="xx"     # incident language
+PL="en"     # parent language(s), comman separated
+
+BASELINE="brown"
+NCLUSTERS=500
+NJOBS=2
+NITERS=500
+
+W_LM=1
+W_CM=1
+
+INPUT_FORMAT="txt" #[elisa:tgz,xml;txt,bio]
+BIO_DELIM=""
+LRLP_FIELD="ULF_LRLP_TOKENIZED_SOURCE"
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+EXP_DIR="$BASEDIR/exp-cipher"
+CODE_DIR="$BASEDIR/src/code"
+
+if [ -z "$CARMEL_DIR" ]; then
+    CARMEL_DIR="/usr/local"
+fi
+if [ -z "$SRILM_DIR" ]; then
+    SRILM_DIR="$HOME/srilm-1.7.2"
+fi
+
+
+while [ $# -gt 1 ]
+do
+key="$1"
+case $key in
+    -lm_o|--lm_order)
+    LM="$2"
+    shift # past argument
+    ;;
+    -i|--input)
+    INPUT="$2"
+    shift # past argument
+    ;;
+    -if|--in_format)
+    INPUT_FORMAT="$2"
+    shift # past argument
+    ;;
+    -bio_delim|--bio_delim)
+    BIO_DELIM="$2"
+    shift # past argument
+    ;;
+    -m|--mode)
+    MODE="$2"
+    shift # past argument
+    ;;
+    -rom|--rom)
+    ROM="$2"
+    shift # past argument
+    ;;
+    -cl|--child_lang)
+    IL="$2"
+    shift # past argument
+    ;;
+    -pl|--par_langs)
+    PL="$2"
+    shift # past argument
+    ;;
+    -o|--output)
+    OUTPUT="$2"
+    shift # past argument
+    ;;
+    -exp|--exp_dir)
+    EXP_DIR="$2"
+    shift # past argument
+    ;;
+    -ca|--clust_alg)
+    BASELINE="$2"
+    shift # past argument
+    ;;
+    -nc|--nclusters)
+    NCLUSTERS="$2"
+    shift # past argument
+    ;;
+    -nj|--njobs)
+    NJOBS="$2"
+    shift # past argument
+    ;;
+    -wlm|--wlm)
+    W_LM="$2"
+    shift # past argument
+    ;;
+    -wcm|--wcm)
+    W_CM="$2"
+    shift # past argument
+    ;;
+    -carmel|--carmel)
+    CARMEL_DIR="$2"
+    shift # past argument
+    ;;
+    -sri|--sridir)
+    SRILM_DIR="$2"
+    shift # past argument
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+shift
+done 
+
+export CARMEL_DIR=$CARMEL_DIR
+export SRILM_DIR=$SRILM_DIR
+export EXP_DIR=$EXP_DIR
+
+
+PL_CODES=(${PL//,/ })
+mkdir -p $EXP_DIR/logs $EXP_DIR/models $EXP_DIR/data
+datadir="$EXP_DIR/data"
+
+
+if [ $OUTPUT = "output" ];then
+    OUTPUT="$datadir/output.tagged"
+fi
+
+
+##########################################################
+# PREPROCESS
+##########################################################
+
+#extract from xml
+echo "Extracting..."
+
+if [ $INPUT_FORMAT = "xml" ]; then
+    python3 src/code/elisa2flat.py --infile $INPUT \
+        --fields $LRLP_FIELD \
+        --outfile $datadir/input.raw
+elif [ $INPUT_FORMAT = "bio" ]; then
+    cat $INPUT | cut -f 1 -d " " | sed 's/^$/#eos/g' | tr '\n' ' ' | \
+    sed 's/ #eos /\n/g' > "$datadir"/input.raw
+else
+    cp $INPUT $datadir/input.raw
+fi
+
+# preprocess 
+echo "Preprocessing..."
+bash $CODE_DIR/preprocess.sh -i $datadir/input.raw -rom $ROM -m $MODE -l input -exp $EXP_DIR
+
+
+
+##########################################################
+# RUN TAGGER
+##########################################################
+
+# train combined LM
+if [ $MODE = "train" ]&&[ "${#PL_CODES[@]}" -gt 1 ]; then
+    echo "Training combined language model..."
+    bash $CODE_DIR/train_combined_lm.sh -l $PL -ord $LM -exp $EXP_DIR
+fi
+
+# run clustering
+if [ $MODE = "train" ]; then
+    echo "Training clustering..."
+    bash src/code/run_clustering.sh -i $datadir/input.clean.filt \
+    -b $BASELINE -nc $NCLUSTERS -nj $NJOBS -exp $EXP_DIR
+fi
+
+echo "Tagging text with cluster ids..."
+bash $CODE_DIR/tag_with_clusters.sh -b $BASELINE -n $NCLUSTERS -i $datadir/input.clean.filt -e $EXP_DIR
+
+
+if [ $MODE = "train" ]; then
+    echo "Training cipher model..."
+    python3 $CODE_DIR/train_cipher.py -il $IL -rl $PL -exp $EXP_DIR \
+    -it $NITERS -rc 100 -lm 2 -b $BASELINE -nc $NCLUSTERS -j $NJOBS -m train -dc 1.1
+
+    python3 $CODE_DIR/combine_channels.py -nc $NCLUSTERS -ca $BASELINE -exp $EXP_DIR -it $NITERS \
+    -il $IL -rl $PL
+fi
+
+
+echo "Decoding with cipher model..."
+if [ $INPUT_FORMAT = "xml" ]||[ $INPUT_FORMAT = "txt" ]; then
+    python3 $CODE_DIR/train_cipher.py -il $IL -rl comb -exp $EXP_DIR \
+    -o $OUTPUT -tk $datadir/input.raw -tkr $datadir/input.raw.roman \
+    -fm $INPUT_FORMAT \
+    -it $NITERS -rc 100 -lm 2 -b $BASELINE -nc $NCLUSTERS -j 1 -m eval -dc 1.1 -ct
+
+elif [ $INPUT_FORMAT = "bio" ]; then
+    python3 src/code/train_cipher.py -il $IL -rl comb -exp $EXP_DIR \
+    -o $OUTPUT -tk $INPUT -tkr $datadir/input.raw.roman \
+    -fm $INPUT_FORMAT \
+    -it $NITERS -rc 100 -lm 2 -b $BASELINE -nc $NCLUSTERS -j 1 -m eval -dc 1.1 -ct
+fi

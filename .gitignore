@@ -1,0 +1,9 @@
+__pycache__/*
+src/code/__pycache__/*
+lm_data/*
+lms/*
+exp-cipher/*
+*.pyc
+*.o
+utagger_hpc
+gen_exp.sh
